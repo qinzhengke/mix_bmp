@@ -6,7 +6,7 @@
 
 #include <limits.h>
 
-#include "raw_bmp.h"
+#include "mix_bmp.h"
 
 ImageWidget::ImageWidget(QWidget *parent)
     :QWidget(parent)

@@ -3,7 +3,7 @@
 
 using namespace std;
 
-#include "raw_bmp.h"
+#include "mix_bmp.h"
 
 # pragma pack(push)
 # pragma pack(1)

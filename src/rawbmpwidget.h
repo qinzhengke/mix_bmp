@@ -5,7 +5,7 @@
 #include <QLabel>
 #include <QLineEdit>
 
-#include "raw_bmp.h"
+#include "mix_bmp.h"
 
 class ImageWidget : public QWidget
 {
