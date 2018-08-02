@@ -60,6 +60,38 @@ int cvt_int16_to_rgb(void *data, color_map_t cmap, int W, int H,
     return 0;
 }
 
+// The memory is allocated inside, remember to release outside.
+int cvt_float_to_rgb(void *data, color_map_t cmap, int W, int H,
+    uint8_t** data_rgb)
+{
+    *data_rgb = new uint8_t[W*H * 3];
+    float* data_f = (float *)data;
+    float min = (float)cmap.min;
+    float max = (float)cmap.max;
+    for (int r = 0; r<H; r++)
+    {
+        for (int c = 0; c<W; c++)
+        {
+            float v = data_f[r*W + c];
+            if (v >= min && v <= max)
+            {
+                int loc = (int)((v - min) / (max - min) * (float)cmap.N);   // divided by 16
+                loc = loc > cmap.N - 1 ? (cmap.N - 1) : (loc<0 ? 0 : loc);
+                (*data_rgb)[r*W * 3 + c * 3 + 0] = cmap.addr[loc * 3 + 0];    //Red
+                (*data_rgb)[r*W * 3 + c * 3 + 1] = cmap.addr[loc * 3 + 1];    //Green
+                (*data_rgb)[r*W * 3 + c * 3 + 2] = cmap.addr[loc * 3 + 2];    //Blue
+            }
+            else    // Invalid value.
+            {
+                (*data_rgb)[r*W * 3 + c * 3 + 0] = 0;   //Red
+                (*data_rgb)[r*W * 3 + c * 3 + 1] = 0;   //Green
+                (*data_rgb)[r*W * 3 + c * 3 + 2] = 0;   //Blue
+            }
+        }
+    }
+    return 0;
+}
+
 int (*cvt_to_rgb[NUM_RAW_BMP_TYPE])(void *data, color_map_t cmap, int W,
                                     int H, uint8_t** data_rgb) =
 {
@@ -70,7 +102,7 @@ int (*cvt_to_rgb[NUM_RAW_BMP_TYPE])(void *data, color_map_t cmap, int W,
     NULL,
     NULL,
     NULL,
-    NULL,
+    cvt_float_to_rgb,
     NULL
 };
 

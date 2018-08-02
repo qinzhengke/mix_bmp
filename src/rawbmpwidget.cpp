@@ -149,8 +149,8 @@ RawBmpWidget::RawBmpWidget(QWidget *parent)
 
 
 
-    lbX = new QLabel("x:", this);
-    lbY = new QLabel("y:", this);
+    lbXl = new QLabel("xl:", this);
+    lbYt = new QLabel("yt:", this);
     leX = new QLineEdit(this);
     leY = new QLineEdit(this);
     lbFac = new QLabel("Fac:", this);
@@ -159,9 +159,9 @@ RawBmpWidget::RawBmpWidget(QWidget *parent)
     leFac->setText(QString::number(factor));
     leBf = new QLineEdit(this);
     QGridLayout * lytXY = new QGridLayout();
-    lytXY->addWidget(lbX, 0, 0, 1, 1);
+    lytXY->addWidget(lbXl, 0, 0, 1, 1);
     lytXY->addWidget(leX, 0, 1, 1, 1);
-    lytXY->addWidget(lbY, 0, 2, 1, 1);
+    lytXY->addWidget(lbYt, 0, 2, 1, 1);
     lytXY->addWidget(leY, 0, 3, 1, 1);
     lytXY->addWidget(lbFac, 1, 0, 1, 1);
     lytXY->addWidget(leFac, 1, 1, 1, 1);
@@ -209,6 +209,27 @@ int RawBmpWidget::setInfoClickI16(int x, int y)
 {
     int16_t v = ((int16_t*)buf)[y*mapW+x];
     float vf = (float)v * factor;
+    QString info = "x:"+QString::number(x) + ", y:"+QString::number(y) +
+            ", v:"+QString::number(vf, 'g', 4);
+
+    if(abs(bf)>0.001 && abs(vf)>0.001)
+    {
+        info += ", dist:"+QString::number(bf/vf, 'g', 4);
+    }
+    lbInfo1->setText(info);
+    lbInfo2->setVisible(false);
+    currX = x;
+    currY = y;
+    currW = 0;
+    currH = 0;
+
+    return 0;
+}
+
+int RawBmpWidget::setInfoClickFloat(int x, int y)
+{
+    float v = ((float*)buf)[y*mapW+x];
+    float vf = v * factor;
     QString info = "x:"+QString::number(x) + ", y:"+QString::number(y) +
             ", v:"+QString::number(vf, 'g', 4);
 
@@ -303,6 +324,9 @@ void RawBmpWidget::onIWMouseClick(int x, int y)
     {
         case RAW_BMP_INT16 :
             setInfoClickI16(x, y);
+        break;
+        case RAW_BMP_FLOAT :
+            setInfoClickFloat(x, y);
         break;
     }
 }

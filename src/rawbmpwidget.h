@@ -50,12 +50,13 @@ protected:
     ImageWidget *iwImage;
     int setInfoClickI16(int x, int y);
     int setInfoDragI16(int x, int y, int w, int h);
+    int setInfoClickFloat(int x, int y);
     int cvt_rgb_to_bgr(uint8_t *data, int W, int H);
     int mapW, mapH;
     color_map_t cmap;
     raw_bmp_type_t type;
     void *buf;
-    QLabel *lbX, *lbY;
+    QLabel *lbXl, *lbYt, *lbXr, *lbYb;
     QLineEdit *leX,*leY;
     QLabel *lbFac, *lbBf;
     QLineEdit *leFac,*leBf;
