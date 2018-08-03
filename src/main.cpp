@@ -30,14 +30,14 @@ void print_hex(char *str)
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    RawBmpWidget rbw;
-    rbw.show();
-//    string a1 = string(argv[1]);
-//    system((string("copy ") + argv[1] + " C:\\temp\\disp.bmp").c_str());
-    if(argc >= 2)
+//    RawBmpWidget rbw;
+//    rbw.show();
+    MainWindow mw;
+    mw.show();
+
+    if(argc >= 2);
     {
-        rbw.open(string(argv[1]));
-//        rbw.open("C:\\temp\\disp.bmp");
+        mw.rbwMainMap->open(string(argv[1]));
     }
 
     return a.exec();

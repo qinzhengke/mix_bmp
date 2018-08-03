@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include <QPainter>
 #include <QMouseEvent>
+#include <QMimeData>
 
 #include <limits.h>
 
@@ -14,6 +15,12 @@ ImageWidget::ImageWidget(QWidget *parent)
     img = NULL;
     isDragging = false;
     isClicked = false;
+
+    setAcceptDrops(true);
+
+    color = QColor(200, 0, 200);
+    color2 = QColor(120, 0, 120);
+    isPoint2Show = false;
 
 }
 
@@ -47,6 +54,16 @@ int ImageWidget::setMouseClick(int x, int y)
     y_pressed = y;
     this->isClicked = true;
     this->isDragging = false;
+    isPoint2Show = false;
+    update();
+    return 0;
+}
+
+int ImageWidget::setPoint2(int x, int y)
+{
+    isPoint2Show = true;
+    x2 = x;
+    y2 = y;
     update();
     return 0;
 }
@@ -59,7 +76,7 @@ void ImageWidget::paintEvent(QPaintEvent *event)
     QPainter painter(this);
     painter.drawImage(0, 0, *img);
 
-    QColor color = QColor(200, 0, 200);
+
 
     painter.setPen(color);
     if(isDragging)
@@ -79,6 +96,15 @@ void ImageWidget::paintEvent(QPaintEvent *event)
         painter.setPen(QPen(brush, w) );
         painter.drawLine(x_pressed-r,y_pressed, x_pressed+r, y_pressed);
         painter.drawLine(x_pressed,y_pressed-r, x_pressed, y_pressed+r);
+    }
+
+    if(isPoint2Show)
+    {
+        int r=2,w=1;
+        QBrush brush(color2);
+        painter.setPen(QPen(brush, w) );
+        painter.drawLine(x2-r,y2, x2+r, y2);
+        painter.drawLine(x2,y2-r, x2, y2+r);
     }
 
 }
@@ -116,7 +142,14 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *me)
         isClicked = true;
         isDragging = false;
         update();
-        emit sendMouseClick(x_pressed, y_pressed);
+        if(me->button() == Qt::LeftButton)
+        {
+            emit sendMouseClick(x_pressed, y_pressed);
+        }
+        else if(me->button() == Qt::RightButton)
+        {
+            emit sendMouseRightClick(x_pressed, y_pressed);
+        }
     }
     else
     {
@@ -131,15 +164,52 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *me)
     isDragging = false;
 }
 
+void ImageWidget::dragEnterEvent(QDragEnterEvent *event)
+{
+//    setText(tr("<drop content>"));
+    setBackgroundRole(QPalette::Highlight);
+
+    event->acceptProposedAction();
+//    emit changed(event->mimeData());
+}
+
+void ImageWidget::dragMoveEvent(QDragMoveEvent *event)
+{
+    event->acceptProposedAction();
+}
+
+void ImageWidget::dropEvent(QDropEvent *event)
+{
+
+    const QMimeData *mimeData = event->mimeData();
+
+    if (mimeData->hasUrls())
+    {
+        emit fileDroped(mimeData->urls().at(0).path());
+    }
+
+    setBackgroundRole(QPalette::Dark);
+    event->acceptProposedAction();
+}
+
+void ImageWidget::dragLeaveEvent(QDragLeaveEvent *event)
+{
+//    clear();
+    event->accept();
+}
+
 RawBmpWidget::RawBmpWidget(QWidget *parent)
     :QWidget(parent)
 {
-    factor = 1.0;
-    bf = 0.0;
+    factor = 0.0625;
+    bf = 21.6;
     currX = 0;
     currY = 0;
     currW = 0;
     currH = 0;
+    isSecMapOpen = false;
+
+    setAcceptDrops(true);
 
 //    this->leftOrRight = leftOrRight;
     iwImage = new ImageWidget(this);
@@ -158,6 +228,11 @@ RawBmpWidget::RawBmpWidget(QWidget *parent)
     leFac = new QLineEdit(this);
     leFac->setText(QString::number(factor));
     leBf = new QLineEdit(this);
+    leBf->setText(QString::number(bf));
+    lbXrlc = new QLabel("xrlc:",this);
+    leXrlc = new QLineEdit(this);
+    lbDrlc = new QLabel("drlc:",this);
+    leDrlc = new QLineEdit(this);
     QGridLayout * lytXY = new QGridLayout();
     lytXY->addWidget(lbXl, 0, 0, 1, 1);
     lytXY->addWidget(leX, 0, 1, 1, 1);
@@ -167,6 +242,10 @@ RawBmpWidget::RawBmpWidget(QWidget *parent)
     lytXY->addWidget(leFac, 1, 1, 1, 1);
     lytXY->addWidget(lbBf, 1, 2, 1, 1);
     lytXY->addWidget(leBf, 1, 3, 1, 1);
+    lytXY->addWidget(lbXrlc, 2, 0, 1, 1);
+    lytXY->addWidget(leXrlc, 2, 1, 1, 1);
+    lytXY->addWidget(lbDrlc, 2, 2, 1, 1);
+    lytXY->addWidget(leDrlc, 2, 3, 1, 1);
 
     QVBoxLayout *lytMain = new QVBoxLayout(this);
 
@@ -181,12 +260,15 @@ RawBmpWidget::RawBmpWidget(QWidget *parent)
             SLOT(onIWMouseClick(int,int)));
     connect(iwImage, SIGNAL(sendMouseDrag(int,int,int,int)), this,
             SLOT(onIWMouseDrag(int,int,int,int)));
+    connect(iwImage, SIGNAL(sendMouseRightClick(int,int)), this,
+            SLOT(onIWMouseRightClick(int,int)));
 
     connect(leX, SIGNAL(textChanged(QString)), this, SLOT(onXYChanged(QString)));
     connect(leY, SIGNAL(textChanged(QString)), this, SLOT(onXYChanged(QString)));
 
     connect(leBf, SIGNAL(textChanged(QString)), this, SLOT(onBfChanged(QString)));
     connect(leFac, SIGNAL(textChanged(QString)), this, SLOT(onFacChanged(QString)));
+
 }
 
 RawBmpWidget::~RawBmpWidget()
@@ -197,7 +279,6 @@ RawBmpWidget::~RawBmpWidget()
 int RawBmpWidget::open(string path)
 {
     uint8_t *data_rgb;
-    int len = path.size();
     read_raw_bmp_file(path, &mapW, &mapH, &type, &buf, &data_rgb, &cmap);
     cvt_rgb_to_bgr(data_rgb, mapW, mapH);
     QImage *qimg_rgb = new QImage(data_rgb, mapW, mapH, QImage::Format_RGB888);
@@ -341,6 +422,12 @@ void RawBmpWidget::onIWMouseDrag(int x, int y, int w, int h)
     }
 }
 
+void RawBmpWidget::dropEvent(QDropEvent *event)
+{
+    leX->setText(event->mimeData()->text());
+}
+
+
 void RawBmpWidget::onXYChanged(QString s)
 {
     int x = leX->text().toInt();
@@ -374,4 +461,79 @@ void RawBmpWidget::onBfChanged(QString s)
     {
         setInfoDragI16(currX, currY, currW, currH);
     }
+}
+
+void RawBmpWidget::onIWMouseRightClick(int x, int y)
+{
+    int16_t v = ((int16_t*)buf)[y*mapW+x];
+    v = (int)((float)v * factor+0.5);
+    setInfoClickI16(x, y);
+    emit acqRightToLeftCheck(x-v, y);
+
+}
+
+void RawBmpWidget::onExtMouseClick(int x, int y)
+{
+    iwImage->setMouseClick(x, y);
+    setInfoClickI16(x, y);
+}
+
+void RawBmpWidget::onAcqRightToLeftCheck(int x, int y)
+{
+    int16_t v = ((int16_t*)buf)[y*mapW+x];
+    v = (int)((float)v * factor+0.5);
+    iwImage->setMouseClick(x, y);
+    setInfoClickI16(x, y);
+    emit ackRightToLeftCheck(x+v, y);
+}
+
+void RawBmpWidget::onAckRightToLeftCHeck(int x, int y)
+{
+    rlcX = x;
+    rlcY = y;
+    leXrlc->setText(QString::number(rlcX));
+    leDrlc->setText(QString::number(rlcX-currX));
+    iwImage->setPoint2(x, y);
+}
+
+
+MainWindow::MainWindow()
+{
+    rbwMainMap = new RawBmpWidget(this);
+    rbwSecMap = new RawBmpWidget(this);
+
+    QWidget *centerWidget = new QWidget(this);
+    QHBoxLayout * centerLayout = new QHBoxLayout();
+    centerLayout->addWidget(rbwMainMap);
+    centerLayout->addWidget(rbwSecMap);
+    centerWidget->setLayout(centerLayout);
+    setCentralWidget(centerWidget);
+
+    isSecMapOpen = false;
+    rbwSecMap->setVisible(isSecMapOpen);
+
+
+    connect(rbwMainMap->iwImage, SIGNAL(fileDroped(QString)), this, SLOT(onFileDroped(QString)));
+
+
+}
+
+
+MainWindow::~MainWindow()
+{
+
+}
+
+void MainWindow::onFileDroped(QString path)
+{
+    path = path.right(path.length()-1); // Remove the first '/' in the string.
+    rbwSecMap->open(path.toStdString());
+    isSecMapOpen = true;
+    rbwSecMap->setVisible(isSecMapOpen);
+
+    connect(rbwMainMap->iwImage, SIGNAL(sendMouseClick(int,int)), rbwSecMap, SLOT(onExtMouseClick(int,int)));
+    connect(rbwSecMap->iwImage, SIGNAL(sendMouseClick(int,int)), rbwMainMap, SLOT(onExtMouseClick(int,int)));
+
+    connect(rbwMainMap, SIGNAL(acqRightToLeftCheck(int,int)), rbwSecMap, SLOT(onAcqRightToLeftCheck(int,int)));
+    connect(rbwSecMap, SIGNAL(ackRightToLeftCheck(int,int)), rbwMainMap, SLOT(onAckRightToLeftCHeck(int,int)));
 }
