@@ -29,6 +29,25 @@ typedef struct {
 #pragma pack(pop)
 
 // The memory is allocated inside, remember to release outside.
+int cvt_uint8_to_rgb(void *data, color_map_t cmap, int W, int H,
+    uint8_t** data_rgb)
+{
+    *data_rgb = new uint8_t[W*H * 3];
+    uint8_t* data_u8 = (uint8_t *)data;
+    for (int r = 0; r<H; r++)
+    {
+        for (int c = 0; c<W; c++)
+        {
+            uint8_t v = data_u8[r*W + c];
+            (*data_rgb)[r*W * 3 + c * 3 + 0] = v;    //Red
+            (*data_rgb)[r*W * 3 + c * 3 + 1] = v;    //Green
+            (*data_rgb)[r*W * 3 + c * 3 + 2] = v;    //Blue
+        }
+    }
+    return 0;
+}
+
+// The memory is allocated inside, remember to release outside.
 int cvt_int16_to_rgb(void *data, color_map_t cmap, int W, int H,
                 uint8_t** data_rgb)
 {
@@ -95,7 +114,7 @@ int cvt_float_to_rgb(void *data, color_map_t cmap, int W, int H,
 int (*cvt_to_rgb[NUM_RAW_BMP_TYPE])(void *data, color_map_t cmap, int W,
                                     int H, uint8_t** data_rgb) =
 {
-    NULL,
+    cvt_uint8_to_rgb,
     NULL,
     NULL,
     cvt_int16_to_rgb,
@@ -108,7 +127,7 @@ int (*cvt_to_rgb[NUM_RAW_BMP_TYPE])(void *data, color_map_t cmap, int W,
 
 const int g_raw_bmp_type_size[NUM_RAW_BMP_TYPE] =
 {
-    0,
+    sizeof(uint8_t),
     sizeof(int8_t),
     sizeof(uint8_t),
     sizeof(int16_t),

@@ -5,8 +5,16 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMainWindow>
+#include <QMessageBox>
 
 #include "mix_bmp.h"
+
+#define MSG_REPORT(x)   \
+    do{                 \
+    QMessageBox msgBox; \
+    msgBox.setText(x);  \
+    msgBox.exec();      \
+    }while(0)           \
 
 class ImageWidget : public QWidget
 {
@@ -59,6 +67,7 @@ public:
     RawBmpWidget(QWidget *parent = 0);
     ~RawBmpWidget();
     int open(string path);
+    int clean();
     ImageWidget *iwImage;
 
 protected:

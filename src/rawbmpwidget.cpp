@@ -33,6 +33,7 @@ int ImageWidget::updateImage(QImage *img)
 {
     this->img = img;
     setMinimumSize((float)img->width(), (float)img->height());
+    update();
     return 0;
 }
 
@@ -283,6 +284,13 @@ int RawBmpWidget::open(string path)
     cvt_rgb_to_bgr(data_rgb, mapW, mapH);
     QImage *qimg_rgb = new QImage(data_rgb, mapW, mapH, QImage::Format_RGB888);
     iwImage->updateImage(qimg_rgb);
+    update();
+    return 0;
+}
+
+int RawBmpWidget::clean()
+{
+    delete buf;
     return 0;
 }
 
@@ -466,7 +474,8 @@ void RawBmpWidget::onBfChanged(QString s)
 void RawBmpWidget::onIWMouseRightClick(int x, int y)
 {
     int16_t v = ((int16_t*)buf)[y*mapW+x];
-    v = (int)((float)v * factor+0.5);
+//    v = (int)((float)v * factor+0.5);
+    v = (int)((float)v * factor);
     setInfoClickI16(x, y);
     emit acqRightToLeftCheck(x-v, y);
 
@@ -481,7 +490,7 @@ void RawBmpWidget::onExtMouseClick(int x, int y)
 void RawBmpWidget::onAcqRightToLeftCheck(int x, int y)
 {
     int16_t v = ((int16_t*)buf)[y*mapW+x];
-    v = (int)((float)v * factor+0.5);
+    v = (int)((float)v * factor /*+0.5*/);
     iwImage->setMouseClick(x, y);
     setInfoClickI16(x, y);
     emit ackRightToLeftCheck(x+v, y);

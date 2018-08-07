@@ -9,8 +9,10 @@ TEMPLATE = app
 SOURCES += \
     ../src/main.cpp \
     ../src/rawbmpwidget.cpp \
-    ../src/mix_bmp.cpp
+    ../src/mix_bmp.cpp \
+    ../src/genmainwindow.cpp
 
 HEADERS  += mainwindow.h \
     ../src/rawbmpwidget.h \
-    ../src/mix_bmp.h
+    ../src/mix_bmp.h \
+    ../src/genmainwindow.h

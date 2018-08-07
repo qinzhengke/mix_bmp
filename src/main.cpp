@@ -1,5 +1,7 @@
 #include "rawbmpwidget.h"
+#include "genmainwindow.h"
 #include <QApplication>
+#include <QDir>
 
 #include <iostream>
 
@@ -32,13 +34,29 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 //    RawBmpWidget rbw;
 //    rbw.show();
-    MainWindow mw;
-    mw.show();
 
-    if(argc >= 2);
+
+    int st = 0;
+    if(2 <= argc)
     {
-        mw.rbwMainMap->open(string(argv[1]));
+        QString path = QString(argv[1]);
+        if(QDir(path).exists()) // batch mode.
+        {
+            BatMainWindow bmw;
+            bmw.loadMapDescr("map_descr.txt");
+            bmw.createFolderList(path);
+            bmw.show();
+            bmw.loadMaps();
+            st = a.exec();
+        }
+        else
+        {
+            MainWindow mw;
+            mw.show();
+            mw.rbwMainMap->open(path.toStdString());
+            st = a.exec();
+        }
     }
 
-    return a.exec();
+    return st;
 }
