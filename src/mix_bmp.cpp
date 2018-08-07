@@ -5,13 +5,19 @@ using namespace std;
 
 #include "mix_bmp.h"
 
+#define INVALID_MIN -128.0 * 16
+#define INVALID_MAX 128.0 * 16
+
+#define UNUSED(x) (x)=(x);
+
 # pragma pack(push)
 # pragma pack(1)
 typedef struct {
     /* type : Magic identifier,BM(0x42,0x4d) */
     unsigned short int type;
     unsigned int size;/* File size in bytes */
-    unsigned short int reserved1, reserved2;
+    unsigned short int number_type; // number type of mix bmp.
+    unsigned short int reserved2;
     unsigned int offset;/* Offset to image data, bytes */
 } BmpFileHeader;
 
@@ -60,7 +66,7 @@ int cvt_int16_to_rgb(void *data, color_map_t cmap, int W, int H,
         for(int c=0; c<W; c++)
         {
             int16_t v = data_i16[r*W+c];
-            if(v>=min && v<=max)
+            if(v>INVALID_MIN && v<INVALID_MAX)
             {
                 int loc = (int) ( (float)(v-min)/(float)(max-min) * (float)cmap.N);   // divided by 16
                 loc = loc > cmap.N-1 ? (cmap.N-1) : (loc<0 ? 0 : loc);
@@ -92,7 +98,7 @@ int cvt_float_to_rgb(void *data, color_map_t cmap, int W, int H,
         for (int c = 0; c<W; c++)
         {
             float v = data_f[r*W + c];
-            if (v >= min && v <= max)
+            if (v > INVALID_MIN && v <= INVALID_MAX)
             {
                 int loc = (int)((v - min) / (max - min) * (float)cmap.N);   // divided by 16
                 loc = loc > cmap.N - 1 ? (cmap.N - 1) : (loc<0 ? 0 : loc);
@@ -158,7 +164,7 @@ int init_raw_bmp_header(BmpFileHeader *fh, BmpInfoHeader *ih, int width,
     fh->type = 0x4d42;
     fh->size = sizeof(BmpFileHeader) + sizeof(BmpInfoHeader) + width*height;
     fh->offset = sizeof(BmpFileHeader) + sizeof(BmpInfoHeader) ;
-    fh->reserved1 = (short int)type;
+    fh->number_type = (short int)type;
     fh->reserved2 = 0;
 
     return 0;
@@ -301,7 +307,7 @@ int read_raw_bmp_file(string path, int *W, int *H, raw_bmp_type_t *type,
     create_color_map(cmap.N, cmap.min, cmap.max, &cmap);
 
     // Load binary data.
-    *type = (raw_bmp_type_t)(fh.reserved1);   // Use reserved1 to record raw bmp type!
+    *type = (raw_bmp_type_t)(fh.number_type);   // Use reserved1 to record raw bmp type!
     *data = (void*) (new char[h*w*g_raw_bmp_type_size[*type]]);
     ifs.read((char*)(*data), h*w*g_raw_bmp_type_size[*type]);
 
