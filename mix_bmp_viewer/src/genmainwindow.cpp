@@ -73,7 +73,7 @@ int BatMainWindow::loadMaps()
     for(int i=0; i<mms.size(); i++)
     {
         QString path = dir + QDir::separator() + mms.at(i).fileName;
-        mms.at(i).rbw->open(path.toStdString());
+        mms.at(i).rbw->open(path);
     }
     return 0;
 }

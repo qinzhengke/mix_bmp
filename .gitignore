@@ -1,6 +1,4 @@
-build-gcc4-linux64/
-build-win64-vc12/
-proj-qt/mix_bmp_viewer.pro.user
-proj-qt/mix_bmp_viewer.pro.user.*
-build/
-build-windows/
+mix_bmp_viewer/proj-qt/mix_bmp_viewer.pro.user
+mix_bmp_viewer/proj-qt/mix_bmp_viewer.pro.user.*
+mix_bmp_viewer/build/
+mix_bmp_viewer/build-windows/
