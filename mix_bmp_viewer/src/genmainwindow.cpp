@@ -1,7 +1,7 @@
 #include "genmainwindow.h"
 #include <QFile>
 #include <QTextStream>
-#include <QGridlayout>
+#include <QGridLayout>
 #include <QDir>
 
 BatMainWindow::BatMainWindow(QWidget *parent) : QMainWindow(parent)

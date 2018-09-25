@@ -10,6 +10,27 @@ using namespace std;
 
 #define UNUSED(x) (x)=(x);
 
+#ifndef PRINT_ERROR
+#define PRINT_ERROR(...)    \
+  do{                       \
+    printf("\x1B[41;37m");  \
+    printf("[ERROR] ");      \
+    printf("\x1B[0m");      \
+    printf(__VA_ARGS__);    \
+    }                       \
+  while(0)
+#endif
+
+#ifndef PRINT_INFO
+#define PRINT_INFO(...)     \
+  do{                       \
+    printf("\1xB[42;37m");  \
+    printf("[INFO] ");      \
+    printf(__VA_ARGS__);    \
+    }                       \
+  while(0)
+#endif
+
 # pragma pack(push)
 # pragma pack(1)
 typedef struct {
@@ -221,14 +242,14 @@ int save_raw_bmp_file(string path, int width, int height, raw_bmp_type_t type,
 {
     if(NULL == cvt_to_rgb[type])
     {
-        printf("Type not support: %d", type);
+        PRINT_ERROR("Type not support: %d", type);
         return -1;
     }
 
     ofstream file(path, ios::binary);
     if (!file.is_open())
     {
-        cout<<"Cannot open file to write,"<<endl;
+        PRINT_ERROR("Cannot open file to write:%s", path.c_str());
         return 1;
     }
 
@@ -275,7 +296,7 @@ int read_raw_bmp_file(string path, int *W, int *H, raw_bmp_type_t *type,
 
     if(!ifs.is_open())
     {
-        printf("[ERROR], read_bmp_file, Cannot open file: %s\n", path.c_str());
+        PRINT_ERROR("Cannot open file: %s\n", path.c_str());
         return 1;
     }
 
@@ -287,7 +308,7 @@ int read_raw_bmp_file(string path, int *W, int *H, raw_bmp_type_t *type,
     int h = abs(ih.height);
     if(ih.imagesize != 3*w*h)
     {
-        printf("[ERROR], read_bmp_file, image size: %u != w*h*3 !\n", ih.imagesize);
+        PRINT_ERROR("image size: %u != w*h*3 !\n", ih.imagesize);
         return 1;
     }
 
