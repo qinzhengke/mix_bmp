@@ -1,5 +1,5 @@
-#ifndef RAWBMPWIDGET_H
-#define RAWBMPWIDGET_H
+#ifndef mixBMPWIDGET_H
+#define mixBMPWIDGET_H
 
 #include <QWidget>
 #include <QLabel>
@@ -62,12 +62,12 @@ private:
 
 };
 
-class RawBmpWidget : public QWidget
+class mixBmpWidget : public QWidget
 {
     Q_OBJECT
 public:
-    RawBmpWidget(QWidget *parent = 0);
-    ~RawBmpWidget();
+    mixBmpWidget(QWidget *parent = 0);
+    ~mixBmpWidget();
     int open(QString path);
     int clean();
     ImageWidget *iwImage;
@@ -80,7 +80,7 @@ protected:
     int cvt_rgb_to_bgr(uint8_t *data, int W, int H);
     int mapW, mapH;
     color_map_t cmap;
-    raw_bmp_type_t type;    // If open a mix bmp, record its type.
+    mix_bmp_type_t type;    // If open a mix bmp, record its type.
     int bmpNumChn;  // If open a normal bmp, record its channel numbers.
     void *buf;
     QLabel *lbXl, *lbYt, *lbXr, *lbYb;
@@ -131,7 +131,7 @@ public:
     MainWindow();
     ~MainWindow();
 
-    RawBmpWidget *rbwMainMap, *rbwSecMap;
+    mixBmpWidget *rbwMainMap, *rbwSecMap;
 
 private:
     bool isSecMapOpen;
@@ -140,4 +140,4 @@ protected slots:
     void onFileDroped(QString path);
 };
 
-#endif // RAWBMPWIDGET_H
+#endif // mixBMPWIDGET_H

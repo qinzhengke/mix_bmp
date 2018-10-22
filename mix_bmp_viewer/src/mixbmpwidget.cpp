@@ -1,4 +1,4 @@
-#include "rawbmpwidget.h"
+#include "mixbmpwidget.h"
 
 #include <QVBoxLayout>
 #include <QPainter>
@@ -82,7 +82,7 @@ void ImageWidget::paintEvent(QPaintEvent *event)
     painter.setPen(color);
     if(isDragging)
     {
-        // Draw dragging rectangle.
+        // Dmix dragging rectangle.
         int xl = qMin(x_dragging, x_pressed);
         int yt = qMin(y_dragging, y_pressed);
         int w = qAbs(x_dragging - x_pressed);
@@ -199,7 +199,7 @@ void ImageWidget::dragLeaveEvent(QDragLeaveEvent *event)
     event->accept();
 }
 
-RawBmpWidget::RawBmpWidget(QWidget *parent)
+mixBmpWidget::mixBmpWidget(QWidget *parent)
     :QWidget(parent)
 {
     factor = 0.0625;
@@ -271,15 +271,15 @@ RawBmpWidget::RawBmpWidget(QWidget *parent)
 
 }
 
-RawBmpWidget::~RawBmpWidget()
+mixBmpWidget::~mixBmpWidget()
 {
 
 }
 
-int RawBmpWidget::open(QString path)
+int mixBmpWidget::open(QString path)
 {
     uint8_t *data_rgb;
-    read_raw_bmp_file(path.toStdString(), &mapW, &mapH, &type, &buf, &data_rgb,
+    read_mix_bmp_file(path.toStdString(), &mapW, &mapH, &type, &buf, &data_rgb,
                       &cmap);
     cvt_rgb_to_bgr(data_rgb, mapW, mapH);
     QImage *qimg_rgb = new QImage(data_rgb, mapW, mapH, QImage::Format_RGB888);
@@ -288,19 +288,19 @@ int RawBmpWidget::open(QString path)
     return 0;
 }
 
-int RawBmpWidget::clean()
+int mixBmpWidget::clean()
 {
     delete buf;
     return 0;
 }
 
-int RawBmpWidget::setInfoClickNorBmp(int x, int y)
+int mixBmpWidget::setInfoClickNorBmp(int x, int y)
 {
 //    uint8_t
     return 0;
 }
 
-int RawBmpWidget::setInfoClickI16(int x, int y)
+int mixBmpWidget::setInfoClickI16(int x, int y)
 {
     int16_t v = ((int16_t*)buf)[y*mapW+x];
     float vf = (float)v * factor;
@@ -321,7 +321,7 @@ int RawBmpWidget::setInfoClickI16(int x, int y)
     return 0;
 }
 
-int RawBmpWidget::setInfoClickFloat(int x, int y)
+int mixBmpWidget::setInfoClickFloat(int x, int y)
 {
     float v = ((float*)buf)[y*mapW+x];
     float vf = v * factor;
@@ -342,7 +342,7 @@ int RawBmpWidget::setInfoClickFloat(int x, int y)
     return 0;
 }
 
-int RawBmpWidget::setInfoDragI16(int x, int y, int w, int h)
+int mixBmpWidget::setInfoDragI16(int x, int y, int w, int h)
 {
     double sum = 0.0, N= 0.0, avr = 0.0;
     int16_t vmin = SHRT_MAX, vmax = SHRT_MIN;
@@ -397,7 +397,7 @@ int RawBmpWidget::setInfoDragI16(int x, int y, int w, int h)
     return 0;
 }
 
-int RawBmpWidget::cvt_rgb_to_bgr(uint8_t *data, int W, int H)
+int mixBmpWidget::cvt_rgb_to_bgr(uint8_t *data, int W, int H)
 {
     for(int r=0; r<H; r++)
     {
@@ -412,40 +412,40 @@ int RawBmpWidget::cvt_rgb_to_bgr(uint8_t *data, int W, int H)
     return 0;
 }
 
-void RawBmpWidget::onIWMouseClick(int x, int y)
+void mixBmpWidget::onIWMouseClick(int x, int y)
 {
 
     switch(type)
     {
-        case NOT_RAW_BMP:
+        case NOT_MIX_BMP:
             setInfoClickNorBmp(x, y);
         break;
-        case RAW_BMP_INT16 :
+        case MIX_BMP_INT16 :
             setInfoClickI16(x, y);
         break;
-        case RAW_BMP_FLOAT :
+        case MIX_BMP_FLOAT :
             setInfoClickFloat(x, y);
         break;
     }
 }
 
-void RawBmpWidget::onIWMouseDrag(int x, int y, int w, int h)
+void mixBmpWidget::onIWMouseDrag(int x, int y, int w, int h)
 {
     switch(type)
     {
-        case RAW_BMP_INT16 :
+        case MIX_BMP_INT16 :
             setInfoDragI16(x, y, w, h);
         break;
     }
 }
 
-void RawBmpWidget::dropEvent(QDropEvent *event)
+void mixBmpWidget::dropEvent(QDropEvent *event)
 {
     leX->setText(event->mimeData()->text());
 }
 
 
-void RawBmpWidget::onXYChanged(QString s)
+void mixBmpWidget::onXYChanged(QString s)
 {
     int x = leX->text().toInt();
     int y = leY->text().toInt();
@@ -453,7 +453,7 @@ void RawBmpWidget::onXYChanged(QString s)
     iwImage->setMouseClick(x, y);
 }
 
-void RawBmpWidget::onFacChanged(QString s)
+void mixBmpWidget::onFacChanged(QString s)
 {
     factor = s.toFloat();
     if(0 >= currW && 0 >= currH)
@@ -466,7 +466,7 @@ void RawBmpWidget::onFacChanged(QString s)
     }
 }
 
-void RawBmpWidget::onBfChanged(QString s)
+void mixBmpWidget::onBfChanged(QString s)
 {
     bf = s.toFloat();
 
@@ -480,7 +480,7 @@ void RawBmpWidget::onBfChanged(QString s)
     }
 }
 
-void RawBmpWidget::onIWMouseRightClick(int x, int y)
+void mixBmpWidget::onIWMouseRightClick(int x, int y)
 {
     int16_t v = ((int16_t*)buf)[y*mapW+x];
 //    v = (int)((float)v * factor+0.5);
@@ -490,13 +490,13 @@ void RawBmpWidget::onIWMouseRightClick(int x, int y)
 
 }
 
-void RawBmpWidget::onExtMouseClick(int x, int y)
+void mixBmpWidget::onExtMouseClick(int x, int y)
 {
     iwImage->setMouseClick(x, y);
     setInfoClickI16(x, y);
 }
 
-void RawBmpWidget::onAcqRightToLeftCheck(int x, int y)
+void mixBmpWidget::onAcqRightToLeftCheck(int x, int y)
 {
     int16_t v = ((int16_t*)buf)[y*mapW+x];
     v = (int)((float)v * factor /*+0.5*/);
@@ -505,7 +505,7 @@ void RawBmpWidget::onAcqRightToLeftCheck(int x, int y)
     emit ackRightToLeftCheck(x+v, y);
 }
 
-void RawBmpWidget::onAckRightToLeftCHeck(int x, int y)
+void mixBmpWidget::onAckRightToLeftCHeck(int x, int y)
 {
     rlcX = x;
     rlcY = y;
@@ -517,8 +517,8 @@ void RawBmpWidget::onAckRightToLeftCHeck(int x, int y)
 
 MainWindow::MainWindow()
 {
-    rbwMainMap = new RawBmpWidget(this);
-    rbwSecMap = new RawBmpWidget(this);
+    rbwMainMap = new mixBmpWidget(this);
+    rbwSecMap = new mixBmpWidget(this);
 
     QWidget *centerWidget = new QWidget(this);
     QHBoxLayout * centerLayout = new QHBoxLayout();

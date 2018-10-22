@@ -8,16 +8,17 @@ TEMPLATE = app
 
 SOURCES += \
     ../src/main.cpp \
-    ../src/rawbmpwidget.cpp \
-    ../../mix_bmp/mix_bmp.cpp \
+    ../src/mixbmpwidget.cpp \
     ../src/genmainwindow.cpp \
-    ../src/bmp.cpp
+    ../src/bmp.cpp  \
+    ../../mix_bmp/mix_bmp.cpp
 
-HEADERS  += mainwindow.h \
-    ../src/rawbmpwidget.h \
-    ../../mix_bmp/mix_bmp.h \
+HEADERS  += \
+    ../src/mainwindow.h \
+    ../src/mixbmpwidget.h \
     ../src/genmainwindow.h \
-    ../src/bmp.h
+    ../src/bmp.h \
+    ../../mix_bmp/mix_bmp.h \
 
 INCLUDEPATH += \
     ../../mix_bmp

@@ -1,7 +1,7 @@
 #ifndef GENMAINWINDOW_H
 #define GENMAINWINDOW_H
 
-#include "rawbmpwidget.h"
+#include "mixbmpwidget.h"
 
 #include <QMainWindow>
 #include <QVector>
@@ -13,7 +13,7 @@ class MapModule
 {
 public:
     MapModule(){}
-    MapModule(RawBmpWidget* rbw, QString fileName, int row, int col, float scale){
+    MapModule(mixBmpWidget* rbw, QString fileName, int row, int col, float scale){
         this->rbw = rbw;
         this->fileName = fileName;
         this->row = row;
@@ -21,7 +21,7 @@ public:
         this->scale = scale;
 
     }
-    RawBmpWidget* rbw;
+    mixBmpWidget* rbw;
     QString fileName;
     int row;
     int col;

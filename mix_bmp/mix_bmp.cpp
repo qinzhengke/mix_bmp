@@ -130,7 +130,7 @@ int cvt_float_to_rgb(void *data, color_map_t cmap, int W, int H,
     return 0;
 }
 
-int (*cvt_to_rgb[NUM_RAW_BMP_TYPE])(void *data, color_map_t cmap, int W,
+int (*cvt_to_rgb[NUM_MIX_BMP_TYPE])(void *data, color_map_t cmap, int W,
                                     int H, uint8_t** data_rgb) =
 {
     cvt_uint8_to_rgb,
@@ -144,7 +144,7 @@ int (*cvt_to_rgb[NUM_RAW_BMP_TYPE])(void *data, color_map_t cmap, int W,
     NULL
 };
 
-const int g_raw_bmp_type_size[NUM_RAW_BMP_TYPE] =
+const int g_mix_bmp_type_size[NUM_MIX_BMP_TYPE] =
 {
     sizeof(uint8_t),
     sizeof(int8_t),
@@ -159,8 +159,8 @@ const int g_raw_bmp_type_size[NUM_RAW_BMP_TYPE] =
 
 
 // type: 1: int8, 2: uint8, 3: int16, 4: uint16, 5: int32, 6: uint32, 7 float, 8: double.
-int init_raw_bmp_header(BmpFileHeader *fh, BmpInfoHeader *ih, int width,
-                        int height, raw_bmp_type_t type)
+int init_mix_bmp_header(BmpFileHeader *fh, BmpInfoHeader *ih, int width,
+                        int height, mix_bmp_type_t type)
 {
     ih->size = sizeof(BmpInfoHeader);
     ih->width = width;
@@ -237,7 +237,7 @@ int create_color_map(int N, double min ,double max, color_map_t *cmap)
     return 0;
 }
 
-int save_raw_bmp_file(string path, int width, int height, raw_bmp_type_t type,
+int save_mix_bmp_file(string path, int width, int height, mix_bmp_type_t type,
                      uint8_t *buf,  int cmapN, double cmap_min, double cmap_max)
 {
     if(NULL == cvt_to_rgb[type])
@@ -255,7 +255,7 @@ int save_raw_bmp_file(string path, int width, int height, raw_bmp_type_t type,
 
     BmpFileHeader fh;
     BmpInfoHeader ih;
-    init_raw_bmp_header(&fh, &ih, width, height, type);
+    init_mix_bmp_header(&fh, &ih, width, height, type);
 
     // Bmp file preview data
     file.write((char*)(&fh), sizeof(BmpFileHeader));
@@ -268,14 +268,14 @@ int save_raw_bmp_file(string path, int width, int height, raw_bmp_type_t type,
     cvt_to_rgb[type]((void*)buf, cmap, width, height, &data_rgb);
     file.write((char*)data_rgb, ih.imagesize);
 
-    // Raw binary data.
-    if(type != NOT_RAW_BMP)
+    // mix binary data.
+    if(type != NOT_MIX_BMP)
     {
         // Color map data
         file.write((char*)(&cmap.N), sizeof(int));
         file.write((char*)(&cmap.min), sizeof(double));
         file.write((char*)(&cmap.max), sizeof(double));
-        file.write((char*)buf, width*height*g_raw_bmp_type_size[type]);
+        file.write((char*)buf, width*height*g_mix_bmp_type_size[type]);
     }
     file.close();
 
@@ -286,7 +286,7 @@ int save_raw_bmp_file(string path, int width, int height, raw_bmp_type_t type,
 }
 
 
-int read_raw_bmp_file(string path, int *W, int *H, raw_bmp_type_t *type,
+int read_mix_bmp_file(string path, int *W, int *H, mix_bmp_type_t *type,
                       void** data, uint8_t **data_rgb, color_map_t *cmap_out)
 {
     cout<<path<<endl;
@@ -313,11 +313,11 @@ int read_raw_bmp_file(string path, int *W, int *H, raw_bmp_type_t *type,
     }
 
     // Load binary data.
-    // Use reserved1 to record raw bmp type!
-    *type = (raw_bmp_type_t)(fh.number_type);
-    *data = (void*) (new char[h*w*g_raw_bmp_type_size[*type]]);
+    // Use reserved1 to record mix bmp type!
+    *type = (mix_bmp_type_t)(fh.number_type);
+    *data = (void*) (new char[h*w*g_mix_bmp_type_size[*type]]);
     color_map_t cmap;
-    if(NOT_RAW_BMP == *type)
+    if(NOT_MIX_BMP == *type)
     {
         ifs.seekg(fh.offset);
     }
@@ -331,7 +331,7 @@ int read_raw_bmp_file(string path, int *W, int *H, raw_bmp_type_t *type,
         ifs.read((char*)(&(cmap.max)), sizeof(double));
         create_color_map(cmap.N, cmap.min, cmap.max, &cmap);
     }
-    ifs.read((char*)(*data), h*w*g_raw_bmp_type_size[*type]);
+    ifs.read((char*)(*data), h*w*g_mix_bmp_type_size[*type]);
 
 
     cvt_to_rgb[*type](*data, cmap, w, h, data_rgb);
@@ -339,6 +339,65 @@ int read_raw_bmp_file(string path, int *W, int *H, raw_bmp_type_t *type,
     *W = w;
     *H = h;
     *cmap_out = cmap;
+
+    return 0;
+}
+
+
+int read_mix_bmp_file(string path, int *W, int *H, mix_bmp_type_t *type,
+                      void** data)
+{
+    cout<<path<<endl;
+    setlocale(LC_ALL,"Chinese-simplified");
+    ifstream ifs(path, ios::binary);
+//    ifs.imbue(locale("chs"));
+
+    if(!ifs.is_open())
+    {
+        PRINT_ERROR("Cannot open file: %s\n", path.c_str());
+        return 1;
+    }
+
+    BmpFileHeader fh;
+    BmpInfoHeader ih;
+    ifs.read((char*)(&fh), sizeof(BmpFileHeader));
+    ifs.read((char*)(&ih), sizeof(BmpInfoHeader));
+    int w = ih.width;
+    int h = abs(ih.height);
+    if(ih.imagesize != 3*w*h)
+    {
+        PRINT_ERROR("image size: %u != w*h*3 !\n", ih.imagesize);
+        ifs.close();
+        return 1;
+    }
+
+    // Load binary data.
+    // Use reserved1 to record mix bmp type!
+    *type = (mix_bmp_type_t)(fh.number_type);
+    *data = (void*) (new char[h*w*g_mix_bmp_type_size[*type]]);
+    color_map_t cmap;
+    if(NOT_MIX_BMP == *type)
+    {
+        ifs.seekg(fh.offset);
+    }
+    else
+    {
+        // Load bmp file
+        ifs.seekg(fh.offset+ih.imagesize, ios::beg);
+        // Load colormap
+        ifs.read((char*)(&(cmap.N)), sizeof(int));
+        ifs.read((char*)(&(cmap.min)), sizeof(double));
+        ifs.read((char*)(&(cmap.max)), sizeof(double));
+        create_color_map(cmap.N, cmap.min, cmap.max, &cmap);
+    }
+    ifs.read((char*)(*data), h*w*g_mix_bmp_type_size[*type]);
+    ifs.close();
+
+//    cvt_to_rgb[*type](*data, cmap, w, h, data_rgb);
+
+//    *W = w;
+//    *H = h;
+//    *cmap_out = cmap;
 
     return 0;
 }

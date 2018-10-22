@@ -29,7 +29,7 @@ int BatMainWindow::loadMapDescr(QString path)
             return -1;
         }
 
-        mms.append(MapModule(new RawBmpWidget(), words[0],words[1].toInt(),
+        mms.append(MapModule(new mixBmpWidget(), words[0],words[1].toInt(),
                 words[2].toInt(), words[3].toFloat()));
     }
     qf.close();

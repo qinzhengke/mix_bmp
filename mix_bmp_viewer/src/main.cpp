@@ -1,4 +1,4 @@
-#include "rawbmpwidget.h"
+#include "mixbmpwidget.h"
 #include "genmainwindow.h"
 #include <QApplication>
 #include <QDir>
@@ -32,7 +32,7 @@ void print_hex(char *str)
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-//    RawBmpWidget rbw;
+//    mixBmpWidget rbw;
 //    rbw.show();
 
 
@@ -57,6 +57,5 @@ int main(int argc, char *argv[])
             st = a.exec();
         }
     }
-
     return st;
 }
